@@ -1,0 +1,8 @@
+Flask
+gunicorn
+requests
+opencv-python-headless
+torch
+tqdm
+nltk
+boto3

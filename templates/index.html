@@ -1,0 +1,585 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Queue App</title>
+    <style>
+      body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        background-color: #425664;
+        color: #ecf0f1;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .container-wrapper {
+        display: flex;
+        justify-content: center; /* Initially center the container */
+        align-items: flex-start; /* Align items to the top */
+        width: 100%;
+        transition: justify-content 0.3s;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #0a2c45;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        width: 50%;
+        padding: 20px;
+        transition: width 0.3s;
+      }
+      .preview-container {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 20px;
+      }
+      .video-preview {
+        width: 50%;
+        height: 300px;
+        border: 1px solid #090909;
+        border-radius: 10px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #cae1f2;
+        position: relative;
+        color: #191919;
+      }
+      .video-preview video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .query-container {
+        padding: 10px 20px;
+        margin-right: 70px;
+        width: 30%;
+        display: flex;
+        flex-direction: column;
+      }
+      .video-queue-container {
+        width: 100%;
+        margin-top: 20px;
+      }
+      .video-queue-card {
+        padding: 20px;
+        border-radius: 10px;
+        background-color: #cae1f2;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .section-title {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 20px;
+        margin-bottom: 10px;
+        text-align: left;
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #previewTitle {
+        color: #ffffff; /* Color for VIDEO PREVIEW title */
+      }
+
+      #queueTitle {
+        color: #0a2c45; /* Color for VIDEO QUEUE title */
+      }
+      .video-queue {
+        display: flex;
+        gap: 10px;
+        max-height: 300px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 10px;
+        color: #051622;
+        white-space: nowrap;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .video-item {
+        flex: 0 0 auto;
+        width: 180px;
+        height: 120px;
+        cursor: pointer;
+        border: 1px solid #95a5a6;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: background-color 0.3s;
+        background-color: #ffffff;
+        position: relative;
+      }
+      .video-item video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .video-item:hover {
+        background-color: #ecf0f1;
+      }
+      .video-item.selected {
+        border: 2px solid #2980b9;
+        background-color: #bdc3c7;
+      }
+      .tick-mark {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 20px;
+        height: 20px;
+        background-color: #2980b9;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+        color: #f4f3f3;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #090909;
+        border-radius: 4px;
+        background-color: #040404;
+        color: #fcfcfd;
+      }
+      button {
+        padding: 10px 20px;
+        background-color: #0388ee;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #78baed;
+      }
+      #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+      #loadingOverlay img {
+        width: 100px;
+        height: 100px;
+      }
+      #resultContainer {
+        display: none; /* Hidden by default */
+        margin-left: 50px; /* Adjust the spacing as needed */
+        width: 45%; /* Adjust the width as needed */
+        background-color: #0a2c45;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+      #resultContainer video {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+      #closeResult {
+        margin-top: 10px;
+        background: #0388ee;
+        color: #fcfcfc;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      #resultVideo {
+        width: 100%;
+        height: auto;
+        max-height: 80vh; /* Ensures the video fits within the viewport */
+      }
+
+      #closeResult:hover {
+        background-color: #78baed;
+      }
+      .hidden {
+        display: none;
+      }
+      .shifted {
+        justify-content: flex-start !important;
+      }
+      .container.shifted {
+        width: 45% !important; /* Adjust the width as needed */
+      }
+      .container-wrapper.shifted {
+        justify-content: flex-start !important;
+      }
+      .add-video-box {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 180px;
+        height: 120px;
+        border: 2px dashed #00090b;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      .add-video-box:hover {
+        background-color: #95d2f1;
+      }
+      .add-video-box span {
+        font-size: 2em;
+        color: #0c0c0c;
+      }
+      .video-queue.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+input[type="text"]:disabled {
+  background-color: #6c757d;
+  color: #ced4da;
+}
+
+    </style>
+  </head>
+  <body>
+    <div class="container-wrapper">
+      <div class="container">
+        <div class="section-title" id="previewTitle">VIDEO PREVIEW</div>
+        <div class="preview-container">
+          <div class="video-preview" id="videoPreview">
+            <div>Select a video from the queue</div>
+          </div>
+          <div class="query-container">
+            <div class="form-group">
+              <label for="videoUrl">Video URL:</label>
+              <input
+                type="text"
+                id="videoUrl"
+                name="videoUrl"
+                placeholder="Enter YouTube video URL..."
+                oninput="handleUrlInput(this)"
+              />
+            </div>
+            <form id="queryForm">
+              <div class="form-group">
+                <label for="query">Query:</label>
+                <input
+                  type="text"
+                  id="query"
+                  name="query"
+                  placeholder="Enter your query..."
+                  required
+                />
+              </div>
+              <button type="submit">Submit Query</button>
+            </form>
+          </div>
+        </div>
+        <div class="video-queue-container">
+          <div class="video-queue-card">
+            <div class="section-title" id="queueTitle">VIDEO QUEUE</div>
+            <div class="video-queue" id="videoQueue">
+              <!-- Video queue items will be dynamically added here -->
+              <div class="add-video-box" id="addVideoBtn">
+                <span>+</span>
+              </div>
+            </div>
+            <div>
+              <!-- <label for="fileInput">Add Video:</label> -->
+              <input
+                type="file"
+                id="fileInput"
+                accept=".mp4,.avi,.mpeg,.webm,.mov"
+                style="display: none"
+              />
+              <!-- <button id="addVideoBtn">+</button> -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="resultContainer" class="result-container">
+        <video id="resultVideo" controls></video>
+        <button id="closeResult">Close</button>
+      </div>
+    </div>
+    <div id="loadingOverlay">
+      <img
+        src="{{ url_for('static', filename='loading.gif') }}"
+        alt="Loading..."
+      />
+    </div>
+
+    <script>
+      let selectedVideoURL = null;
+
+      // Function to select a video from the queue
+      function selectVideo(videoURL, videoItem) {
+        const videoPreview = document.getElementById("videoPreview");
+        videoPreview.innerHTML = `<video controls><source src="${videoURL}" type="video/mp4"></video>`;
+        selectedVideoURL = videoURL;
+        document.getElementById("videoUrl").disabled = true;
+        document.getElementById("query").disabled = false;
+
+        // Remove the selected class from all video items
+        document.querySelectorAll(".video-item").forEach((item) => {
+          item.classList.remove("selected");
+          const tickMark = item.querySelector(".tick-mark");
+          if (tickMark) {
+            tickMark.remove();
+          }
+        });
+        if (videoItem) {
+        // Add the selected class and tick mark to the clicked video item
+        videoItem.classList.add("selected");
+        const tickMark = document.createElement("div");
+        tickMark.classList.add("tick-mark");
+        tickMark.innerHTML = "✓";
+        videoItem.appendChild(tickMark);
+      }
+    }
+
+      // Function to populate video queue from server response
+      async function populateVideoQueue() {
+        const videoQueue = document.getElementById("videoQueue");
+        videoQueue.innerHTML = "";
+
+        try {
+          const addVideoBox = document.createElement("div");
+          addVideoBox.classList.add("add-video-box");
+          addVideoBox.innerHTML = "<span>+</span>";
+          addVideoBox.addEventListener("click", () => {
+            document.getElementById("fileInput").click();
+          });
+          videoQueue.appendChild(addVideoBox);
+          const response = await fetch("/get_videos");
+          const videos = await response.json();
+
+          videos.forEach((video) => {
+            const videoItem = document.createElement("div");
+            videoItem.classList.add("video-item");
+            videoItem.innerHTML = `<video src="${video.url}" controls></video>`;
+
+            videoItem.addEventListener("click", () => {
+              selectVideo(video.url, videoItem);
+            });
+
+            videoQueue.appendChild(videoItem);
+          });
+        } catch (error) {
+          console.error("Error fetching videos:", error);
+        }
+      }
+
+      // Function to handle file input change (adding video from local file system)
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          if (file) {
+            const videoURL = URL.createObjectURL(file);
+            selectVideo(videoURL, null); // Directly select the video for preview
+          }
+        });
+
+      // Event listener for URL input change (fetch and display video from YouTube)
+      document
+        .getElementById("videoUrl")
+        .addEventListener("input", async function () {
+          const url = document.getElementById("videoUrl").value.trim();
+          const videoPreview = document.getElementById("videoPreview");
+          const videoQueue = document.getElementById("videoQueue");
+          videoPreview.innerHTML = `<img src="/static/downloadfinal.gif" alt="Loading..." />`; // Show loading GIF
+
+          if (
+            url &&
+            (url.includes("youtube.com") || url.includes("youtu.be"))
+          ) {
+            videoQueue.classList.add("disabled");
+    document.getElementById("query").disabled = true;
+    document.getElementById("videoUrl").disabled = true;
+            try {
+              const response = await fetch("/download_video", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ url: url }),
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                const videoPath = `${data.video_path}`;
+
+                // Update videoPreview with the served video path
+                videoPreview.innerHTML = `<video controls><source src="${videoPath}" type="video/mp4"></video>`;
+                selectedVideoURL = videoPath; // Set selected video URL
+                document.getElementById("query").disabled = false;
+              } else {
+                console.error(
+                  "Failed to fetch video:",
+                  response.status,
+                  response.statusText
+                );
+                alert("Failed to fetch video from URL. Please try again.");
+                videoPreview.innerHTML = `<div>Select a video from the queue</div>`; // Reset preview box
+                videoQueue.classList.remove("disabled");
+                document.getElementById("query").disabled = false;
+                document.getElementById("videoUrl").disabled = false;
+              }
+            } catch (error) {
+              console.error("Error fetching video:", error);
+              alert(
+                "An error occurred while fetching the video. Please try again later."
+              );
+              videoPreview.innerHTML = `<div>Select a video from the queue</div>`; // Reset preview box
+              videoQueue.classList.remove("disabled");
+      document.getElementById("query").disabled = false;
+      document.getElementById("videoUrl").disabled = false;
+            }
+          }
+          else {
+    // Enable video queue if the URL is not valid
+    videoQueue.classList.remove("disabled");
+    document.getElementById("query").disabled = false;
+    document.getElementById("videoUrl").disabled = false;
+    videoPreview.innerHTML = `<div>Select a video from the queue</div>`;
+  }
+        });
+
+      // Event listener for add video button (to trigger file input click)
+      document
+        .getElementById("addVideoBtn")
+        .addEventListener("click", function () {
+          document.getElementById("fileInput").click();
+        });
+
+      // Load videos from server when the page loads
+      window.addEventListener("DOMContentLoaded", function () {
+        populateVideoQueue();
+      });
+
+      document
+        .getElementById("queryForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          const query = document.getElementById("query").value;
+          if (!selectedVideoURL) {
+            alert("Please select a video from the queue.");
+            return;
+          }
+
+          try {
+            const response = await fetch(selectedVideoURL);
+            const videoBlob = await response.blob();
+
+            const formData = new FormData();
+            formData.append("query", query);
+            formData.append("video", videoBlob, "video.mp4");
+
+            const resultResponse = await fetch("/process_query", {
+              method: "POST",
+              body: formData,
+            });
+
+            const resultData = await resultResponse.json();
+            if (resultData.success) {
+              const resultContainer =
+                document.getElementById("resultContainer");
+              const resultVideo = document.getElementById("resultVideo");
+              resultVideo.src = resultData.result_video_url;
+              resultContainer.style.display = "block"; // Show the result container
+            } else {
+              alert("Error processing query: " + resultData.error);
+            }
+          } catch (error) {
+            console.error("Error submitting query:", error);
+          }
+        });
+
+      // Close result container
+      document
+        .getElementById("closeResult")
+        .addEventListener("click", function () {
+          const resultContainer = document.getElementById("resultContainer");
+          const resultVideo = document.getElementById("resultVideo");
+          resultContainer.style.display = "none"; // Hide the result container
+          resultVideo.pause();
+        });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        
+        const queryForm = document.getElementById("queryForm");
+        const loadingOverlay = document.getElementById("loadingOverlay");
+        const resultContainer = document.getElementById("resultContainer");
+        const resultVideo = document.getElementById("resultVideo");
+        const closeResult = document.getElementById("closeResult");
+        const container = document.getElementById("container");
+        const containerWrapper = document.getElementById("containerWrapper");
+
+        queryForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          loadingOverlay.style.display = "flex";
+
+          try {
+            // Simulate processing time (2 seconds)
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
+            // Simulated successful result
+            const resultVideoUrl = "path_to_your_video.mp4"; // Replace with actual result URL
+            resultVideo.src = resultVideoUrl;
+
+            // Check if result video URL is valid
+            if (resultVideoUrl) {
+              resultContainer.style.display = "block"; // Show the result container
+            } else {
+              resultContainer.style.display = "none"; // Hide if no valid video URL
+            }
+
+            // Hide loading overlay only after the video is loaded
+            resultVideo.onloadeddata = () => {
+              loadingOverlay.style.display = "none";
+            };
+          } catch (error) {
+            console.error("Error processing query:", error);
+            alert("An error occurred while processing the query.");
+            loadingOverlay.style.display = "none"; // Ensure loading overlay is hidden on error
+          }
+        });
+
+        closeResult.addEventListener("click", () => {
+          resultContainer.style.display = "none";
+          container.classList.remove("shifted");
+          containerWrapper.classList.remove("shifted");
+          resultVideo.pause();
+        });
+      });
+
+      
+    </script>
+  </body>
+</html>
